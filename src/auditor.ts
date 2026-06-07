@@ -21,6 +21,44 @@ function hasWorkflowWith(workflows: Array<string | null>, patterns: RegExp[]): b
   return workflows.some((content) => content !== null && patterns.every((pattern) => pattern.test(content)));
 }
 
+function evaluateCiWorkflow(workflows: Array<string | null>): { status: CheckStatus; message: string } {
+  const hasInstall = hasWorkflowWith(workflows, [/npm\s+ci/is]);
+  const hasValidation = hasWorkflowWith(workflows, [/npm\s+run\s+(lint|build|test|validate)|npm\s+test|npx\s+tsc/is]);
+  const hasAnyCiSignal = hasWorkflowWith(workflows, [/name:\s*CI|npm\s+ci|npm\s+run\s+(lint|build|test|validate)|npm\s+test|npx\s+tsc/is]);
+
+  if (hasInstall && hasValidation) {
+    return { status: 'pass', message: 'CI workflow installs dependencies and runs validation commands.' };
+  }
+
+  if (hasAnyCiSignal) {
+    return {
+      status: 'warn',
+      message: 'CI workflow signal found, but npm ci plus validation commands were not both detected.',
+    };
+  }
+
+  return { status: 'warn', message: 'No obvious CI validation workflow detected.' };
+}
+
+function evaluatePublishWorkflow(workflows: Array<string | null>): { status: CheckStatus; message: string } {
+  const hasTagTrigger = hasWorkflowWith(workflows, [/push\s*:/is, /tags\s*:/is]);
+  const hasOidc = hasWorkflowWith(workflows, [/id-token\s*:\s*write/is]);
+  const hasProvenancePublish = hasWorkflowWith(workflows, [/npm\s+publish[^\n]*--provenance|npm\s+run\s+release|n8n-node\s+release/is]);
+
+  if (hasTagTrigger && hasOidc && hasProvenancePublish) {
+    return { status: 'pass', message: 'Publish workflow includes tag trigger, OIDC, and provenance publish signals.' };
+  }
+
+  if (hasOidc || hasProvenancePublish) {
+    return {
+      status: 'warn',
+      message: 'Publish workflow has partial provenance signals, but tag trigger, OIDC, and publish command were not all detected.',
+    };
+  }
+
+  return { status: 'fail', message: 'No npm provenance/Trusted Publishing workflow detected.' };
+}
+
 function check(
   id: string,
   title: string,
@@ -157,27 +195,25 @@ export async function auditPackage(packagePath: string): Promise<AuditReport> {
     ),
   );
 
+  const ciWorkflow = evaluateCiWorkflow(workflows);
   checks.push(
     check(
       'ci.workflow',
       'CI workflow',
-      hasWorkflowWith(workflows, [/name:\s*CI|npm\s+run\s+(lint|build|validate)|npm\s+ci/is]) ? 'pass' : 'warn',
-      hasWorkflowWith(workflows, [/name:\s*CI|npm\s+run\s+(lint|build|validate)|npm\s+ci/is])
-        ? 'GitHub Actions CI workflow detected.'
-        : 'No obvious CI validation workflow detected.',
+      ciWorkflow.status,
+      ciWorkflow.message,
       10,
       'Add a GitHub Actions workflow that runs npm ci, lint, build, tests, and package checks.',
     ),
   );
 
+  const publishWorkflow = evaluatePublishWorkflow(workflows);
   checks.push(
     check(
       'publish.provenance',
       'npm provenance publishing',
-      hasWorkflowWith(workflows, [/id-token:\s*write/is, /provenance|npm\s+publish/is]) ? 'pass' : 'fail',
-      hasWorkflowWith(workflows, [/id-token:\s*write/is, /provenance|npm\s+publish/is])
-        ? 'Publish workflow includes OIDC/provenance signals.'
-        : 'No npm provenance/Trusted Publishing workflow detected.',
+      publishWorkflow.status,
+      publishWorkflow.message,
       14,
       'Add a tag-triggered publish workflow with id-token: write and npm publish --provenance or an n8n-node release flow.',
     ),

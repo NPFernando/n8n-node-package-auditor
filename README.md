@@ -10,8 +10,8 @@ It was built as a portfolio-friendly automation tool after hardening and publish
 - package license, repository, and issue tracker metadata
 - `package.json` `n8n` node/credential entry points
 - build/lint script availability
-- GitHub Actions CI workflow signals
-- npm Trusted Publishing / provenance workflow signals
+- GitHub Actions CI workflow signals, including dependency installation plus validation commands
+- npm Trusted Publishing / provenance workflow signals, including tag triggers and OIDC permissions
 - README installation and usage sections
 - SECURITY.md or README security guidance
 
@@ -74,6 +74,7 @@ npm run validate
 - Static package-folder audit only; it does not call npm or GitHub APIs yet.
 - Failing checks exit with a non-zero status so the tool can run in CI.
 - JSON and Markdown formats are intended for automation reports and PR comments.
+- Text reports hide absolute local path prefixes by default to avoid leaking machine-specific WSL/home paths in public snippets.
 
 ## Roadmap
 

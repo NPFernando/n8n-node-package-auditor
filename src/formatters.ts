@@ -1,4 +1,5 @@
 import type { AuditCheck, AuditReport, CheckStatus } from './types.js';
+import { basename, isAbsolute } from 'node:path';
 
 const statusIcon: Record<CheckStatus, string> = {
   pass: '✓',
@@ -16,12 +17,16 @@ function statusLabel(status: CheckStatus): string {
   return 'Failed';
 }
 
+function safeDisplayPath(packagePath: string): string {
+  return isAbsolute(packagePath) ? basename(packagePath) : packagePath;
+}
+
 export function formatTextReport(report: AuditReport): string {
   const lines = [
     'n8n Node Package Audit',
     '',
     `Package: ${report.packageName}${report.version ? `@${report.version}` : ''}`,
-    `Path: ${report.packagePath}`,
+    `Path: ${safeDisplayPath(report.packagePath)}`,
     `Score: ${report.score}/100`,
     `Summary: ${report.summary.pass} passed, ${report.summary.warn} warnings, ${report.summary.fail} failed`,
     '',
