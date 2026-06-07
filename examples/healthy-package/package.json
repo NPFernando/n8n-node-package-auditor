@@ -1,0 +1,22 @@
+{
+  "name": "n8n-nodes-healthy-example",
+  "version": "1.0.0",
+  "license": "MIT",
+  "keywords": ["n8n-community-node-package"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/example/n8n-nodes-healthy-example.git"
+  },
+  "bugs": {
+    "url": "https://github.com/example/n8n-nodes-healthy-example/issues"
+  },
+  "scripts": {
+    "lint": "n8n-node lint",
+    "build": "n8n-node build"
+  },
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": ["dist/credentials/Example.credentials.js"],
+    "nodes": ["dist/nodes/Example/Example.node.js"]
+  }
+}

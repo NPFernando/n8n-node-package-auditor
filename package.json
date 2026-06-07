@@ -1,0 +1,50 @@
+{
+  "name": "n8n-node-package-auditor",
+  "version": "0.1.0",
+  "description": "CLI auditor for n8n community node package metadata, CI, provenance, and documentation quality.",
+  "type": "module",
+  "bin": {
+    "n8n-node-package-auditor": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "release": "npm run validate && npm publish --provenance",
+    "prepack": "npm run build",
+    "validate": "npm run lint && npm test && npm run build && node dist/cli.js examples/healthy-package --format text && node dist/cli.js examples/healthy-package --format json > /tmp/n8n-node-package-auditor-report.json && node dist/cli.js examples/healthy-package --format markdown > /tmp/n8n-node-package-auditor-report.md"
+  },
+  "keywords": [
+    "n8n",
+    "community-node",
+    "audit",
+    "cli",
+    "npm",
+    "provenance"
+  ],
+  "author": {
+    "name": "Naveen Fernando"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/NPFernando/n8n-node-package-auditor#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NPFernando/n8n-node-package-auditor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/NPFernando/n8n-node-package-auditor/issues"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
+  }
+}
