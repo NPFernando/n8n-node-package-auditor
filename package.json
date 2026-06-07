@@ -1,13 +1,13 @@
 {
-  "name": "n8n-node-package-auditor",
+  "name": "n8n-nodes-package-auditor",
   "version": "0.1.0",
-  "description": "CLI auditor for n8n community node package metadata, CI, provenance, and documentation quality.",
-  "type": "module",
+  "description": "n8n community node and CLI auditor for n8n package metadata, CI, provenance, and documentation quality.",
   "bin": {
     "n8n-node-package-auditor": "dist/cli.js"
   },
   "files": [
     "dist",
+    "scripts/smoke-n8n-docker.sh",
     "README.md"
   ],
   "scripts": {
@@ -17,9 +17,12 @@
     "lint": "tsc -p tsconfig.json --noEmit",
     "release": "npm run validate && npm publish --provenance",
     "prepack": "npm run build",
-    "validate": "npm run lint && npm test && npm run build && node dist/cli.js examples/healthy-package --format text && node dist/cli.js examples/healthy-package --format json > /tmp/n8n-node-package-auditor-report.json && node dist/cli.js examples/healthy-package --format markdown > /tmp/n8n-node-package-auditor-report.md"
+    "audit:prod": "npm audit --omit=dev --audit-level=critical",
+    "smoke:n8n:docker": "bash scripts/smoke-n8n-docker.sh",
+    "validate": "npm run lint && npm test && npm run build && npm run audit:prod && node dist/cli.js examples/healthy-package --format text && node dist/cli.js examples/healthy-package --format json > /tmp/n8n-node-package-auditor-report.json && node dist/cli.js examples/healthy-package --format markdown > /tmp/n8n-node-package-auditor-report.md"
   },
   "keywords": [
+    "n8n-community-node-package",
     "n8n",
     "community-node",
     "audit",
@@ -39,12 +42,27 @@
   "bugs": {
     "url": "https://github.com/NPFernando/n8n-node-package-auditor/issues"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "strict": true,
+    "nodes": [
+      "dist/nodes/PackageAuditor/PackageAuditor.node.js"
+    ]
+  },
   "engines": {
-    "node": ">=20.19"
+    "node": ">=22.14 <25",
+    "npm": ">=10"
   },
   "devDependencies": {
     "@types/node": "^20.19.0",
+    "n8n-workflow": "^2.16.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.15"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
   }
 }
